@@ -40,8 +40,8 @@ USER_AGENT = (
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
 )
-DEFAULT_BASE_URL = os.getenv("VINTED_BASE_URL", "https://www.vinted.com").rstrip("/")
-API_HOST_COM = "https://www.vinted.com"
+DEFAULT_BASE_URL = os.getenv("VINTED_BASE_URL", "https://www.vinted.pt").rstrip("/")
+API_HOST_COM = "https://www.vinted.pt"
 APIFY_ACTOR_ID = "bebity~vinted-premium-actor"
 APIFY_API_BASE = "https://api.apify.com/v2"  # base para chamadas Apify
 DEFAULT_PER_PAGE = int(os.getenv("VINTED_PER_PAGE", "20"))
