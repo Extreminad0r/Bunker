@@ -42,7 +42,7 @@ USER_AGENT = (
     "(KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
 )
 API_HOST = "https://www.vinted.com"  # API é .com mesmo que o front seja .pt
-TOKEN_ENDPOINT = f"{API_HOST}/api/v2/token"
+TOKEN_ENDPOINT = f"{API_HOST}/api/v2/oauth/token"
 USER_ITEMS_ENDPOINT = f"{API_HOST}/api/v2/users/{{user_id}}/items"
 
 DEFAULT_PER_PAGE = int(os.getenv("VINTED_PER_PAGE", "20"))
