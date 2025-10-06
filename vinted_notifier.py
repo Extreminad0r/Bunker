@@ -62,32 +62,44 @@ class VintedClient:
             "User-Agent": USER_AGENT,
             "Accept": "application/json, text/plain, */*",
         })
+import xml.etree.ElementTree as ET
 
-    def fetch_user_items(
-        self,
-        user_id: str,
-        per_page: int = DEFAULT_PER_PAGE,
-        page: int = 1,
-        order: str = "newest_first",
-    ) -> dict:
-        """
-        Obtém itens públicos de um utilizador via /api/v2/catalog/items.
-        Este endpoint substitui o antigo /api/v2/users/<id>/items.
-        """
-        params = {
-            "user_id": user_id,
-            "order": order,
-            "page": page,
-            "per_page": per_page,
-        }
-        url = f"{API_HOST}/api/v2/catalog/items"
-        headers = {
-            "User-Agent": USER_AGENT,
-            "Accept": "application/json, text/plain, */*",
-        }
-        resp = self.session.get(url, params=params, headers=headers, timeout=TIMEOUT)
-        resp.raise_for_status()
-        return resp.json()
+def fetch_user_items(self, user_id: str, **kwargs) -> dict:
+    """
+    Obtém itens via feed RSS público (sem autenticação).
+    Retorna um dicionário com 'items' no mesmo formato usado no resto do script.
+    """
+    url = f"{API_HOST}/member/{user_id}/items/feed"
+    headers = {
+        "User-Agent": USER_AGENT,
+        "Accept": "application/rss+xml, application/xml;q=0.9, */*;q=0.8",
+    }
+    resp = self.session.get(url, headers=headers, timeout=TIMEOUT)
+    resp.raise_for_status()
+
+    # Parse RSS
+    root = ET.fromstring(resp.text)
+    ns = {"atom": "http://www.w3.org/2005/Atom"}
+    entries = []
+    for item in root.findall("channel/item"):
+        title = item.findtext("title") or "Sem título"
+        link = item.findtext("link") or ""
+        description = item.findtext("description") or ""
+        # extrai imagem se existir dentro da descrição
+        img_url = None
+        if "img src=" in description:
+            start = description.find("img src=") + 9
+            end = description.find('"', start)
+            img_url = description[start:end]
+        entries.append({
+            "id": hash(link) % (10**9),
+            "title": title,
+            "url": link,
+            "photo": {"url": img_url} if img_url else {},
+            "price": "",  # RSS não traz preço diretamente
+        })
+    return {"items": entries}
+
 
 def load_history(path: str = HISTORY_FILE) -> Dict[str, List[int]]:
     """Carrega histórico de IDs por user_id. Estrutura: { "<user_id>": [id1, id2, ...] }"""
