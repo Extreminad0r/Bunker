@@ -110,25 +110,25 @@ class VintedClient:
         per_page: int = DEFAULT_PER_PAGE,
         page: int = 1,
         order: str = "newest_first",
-        status: str = "active",
     ) -> dict:
         """
-        Obtém itens de um utilizador. Parâmetros comuns:
-          - per_page: 20 recomendado (a API geralmente suporta 100, mas 20 é seguro)
-          - page: página (1-based)
-          - order: 'newest_first' para ver os mais recentes primeiro
-          - status: 'active' para itens ativos
+        Obtém itens públicos de um utilizador via /api/v2/catalog/items.
+        Este endpoint substitui o antigo /api/v2/users/<id>/items.
         """
         params = {
+            "user_id": user_id,
+            "order": order,
             "page": page,
             "per_page": per_page,
-            "order": order,
-            "status": status,
         }
-        url = USER_ITEMS_ENDPOINT.format(user_id=user_id)
-        resp = self._authorized_get(url, params=params)
+        url = f"{API_HOST}/api/v2/catalog/items"
+        headers = {
+            "User-Agent": USER_AGENT,
+            "Accept": "application/json, text/plain, */*",
+        }
+        resp = self.session.get(url, params=params, headers=headers, timeout=TIMEOUT)
+        resp.raise_for_status()
         return resp.json()
-
 
 def load_history(path: str = HISTORY_FILE) -> Dict[str, List[int]]:
     """Carrega histórico de IDs por user_id. Estrutura: { "<user_id>": [id1, id2, ...] }"""
