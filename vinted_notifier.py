@@ -62,47 +62,6 @@ class VintedClient:
             "User-Agent": USER_AGENT,
             "Accept": "application/json, text/plain, */*",
         })
-        self._token: Optional[str] = None
-
-    def _ensure_token(self) -> None:
-        """
-        Obtém (ou renova) o guest token via endpoint /api/v2/session.
-        Não requer cookies nem CSRF.
-        """
-        url = "https://www.vinted.com/api/v2/session"
-        headers = {
-            "User-Agent": USER_AGENT,
-            "Accept": "application/json, text/plain, */*",
-            "X-Requested-With": "XMLHttpRequest",
-        }
-        resp = self.session.get(url, headers=headers, timeout=TIMEOUT)
-        resp.raise_for_status()
-        data = resp.json()
-        token = (
-            data.get("access_token")
-            or data.get("token")
-            or data.get("guest_token")
-            or data.get("session_token")
-        )
-        if not token:
-            raise RuntimeError(f"Não foi possível obter token convidado. Resposta: {data}")
-        self._token = token
-        self.session.headers.update({"Authorization": f"Bearer {self._token}"})
-
-    def _authorized_get(self, url: str, params: Optional[dict] = None) -> requests.Response:
-        """
-        GET autenticado com Bearer. Se 401, renova token e repete uma vez.
-        """
-        if not self._token:
-            self._ensure_token()
-        resp = self.session.get(url, params=params, timeout=TIMEOUT)
-        if resp.status_code == 401:
-            # token expirou/invalidado -> renova e tenta de novo
-            self._ensure_token()
-            time.sleep(RETRY_SLEEP)
-            resp = self.session.get(url, params=params, timeout=TIMEOUT)
-        resp.raise_for_status()
-        return resp
 
     def fetch_user_items(
         self,
