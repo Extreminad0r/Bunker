@@ -46,7 +46,7 @@ TOKEN_ENDPOINT = f"{API_HOST}/api/v2/oauth/token"
 USER_ITEMS_ENDPOINT = f"{API_HOST}/api/v2/users/{{user_id}}/items"
 
 DEFAULT_PER_PAGE = int(os.getenv("VINTED_PER_PAGE", "20"))
-DEFAULT_BASE_URL = os.getenv("VINTED_BASE_URL", "https://www.vinted.com")  # usado para links do item
+DEFAULT_BASE_URL = os.getenv("VINTED_BASE_URL", "https://www.vinted.pt")  # usado para links do item
 
 HISTORY_FILE = "last_items.json"
 TIMEOUT = 15  # segundos
