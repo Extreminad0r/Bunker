@@ -54,7 +54,7 @@ RETRY_SLEEP = 1.2  # segundos entre tentativas leves
 
 
 class VintedClient:
-    """Cliente minimalista da API pública da Vinted com token convidado (guest)."""
+    """Cliente minimalista da API pública da Vinted."""
 
     def __init__(self, session: Optional[requests.Session] = None):
         self.session = session or requests.Session()
@@ -62,44 +62,44 @@ class VintedClient:
             "User-Agent": USER_AGENT,
             "Accept": "application/json, text/plain, */*",
         })
-import xml.etree.ElementTree as ET
 
-def fetch_user_items(self, user_id: str, **kwargs) -> dict:
-    """
-    Obtém itens via feed RSS público (sem autenticação).
-    Retorna um dicionário com 'items' no mesmo formato usado no resto do script.
-    """
-    url = f"{API_HOST}/member/{user_id}/items/feed"
-    headers = {
-        "User-Agent": USER_AGENT,
-        "Accept": "application/rss+xml, application/xml;q=0.9, */*;q=0.8",
-    }
-    resp = self.session.get(url, headers=headers, timeout=TIMEOUT)
-    resp.raise_for_status()
+    def fetch_user_items(self, user_id: str, **kwargs) -> dict:
+        """
+        Obtém itens via feed RSS público (sem autenticação).
+        Retorna um dicionário com 'items' no mesmo formato usado no resto do script.
+        """
+        import xml.etree.ElementTree as ET
 
-    # Parse RSS
-    root = ET.fromstring(resp.text)
-    ns = {"atom": "http://www.w3.org/2005/Atom"}
-    entries = []
-    for item in root.findall("channel/item"):
-        title = item.findtext("title") or "Sem título"
-        link = item.findtext("link") or ""
-        description = item.findtext("description") or ""
-        # extrai imagem se existir dentro da descrição
-        img_url = None
-        if "img src=" in description:
-            start = description.find("img src=") + 9
-            end = description.find('"', start)
-            img_url = description[start:end]
-        entries.append({
-            "id": hash(link) % (10**9),
-            "title": title,
-            "url": link,
-            "photo": {"url": img_url} if img_url else {},
-            "price": "",  # RSS não traz preço diretamente
-        })
-    return {"items": entries}
+        url = f"{API_HOST}/member/{user_id}/items/feed"
+        headers = {
+            "User-Agent": USER_AGENT,
+            "Accept": "application/rss+xml, application/xml;q=0.9, */*;q=0.8",
+        }
+        resp = self.session.get(url, headers=headers, timeout=TIMEOUT)
+        resp.raise_for_status()
 
+        # Parse RSS
+        root = ET.fromstring(resp.text)
+        entries = []
+        for item in root.findall("channel/item"):
+            title = item.findtext("title") or "Sem título"
+            link = item.findtext("link") or ""
+            description = item.findtext("description") or ""
+
+            img_url = None
+            if "img src=" in description:
+                start = description.find("img src=") + 9
+                end = description.find('"', start)
+                img_url = description[start:end]
+
+            entries.append({
+                "id": hash(link) % (10**9),
+                "title": title,
+                "url": link,
+                "photo": {"url": img_url} if img_url else {},
+                "price": "",  # RSS não traz preço diretamente
+            })
+        return {"items": entries}
 
 def load_history(path: str = HISTORY_FILE) -> Dict[str, List[int]]:
     """Carrega histórico de IDs por user_id. Estrutura: { "<user_id>": [id1, id2, ...] }"""
