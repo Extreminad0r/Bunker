@@ -65,16 +65,27 @@ class VintedClient:
         self._token: Optional[str] = None
 
     def _ensure_token(self) -> None:
-        """Obtém (ou renova) o guest token via /api/v2/token."""
-        resp = self.session.get(TOKEN_ENDPOINT, timeout=TIMEOUT)
+        """Obtém (ou renova) o guest token via /api/v2/token endpoint atualizado."""
+        url = "https://www.vinted.com/api/v2/token"
+        headers = {
+            "User-Agent": USER_AGENT,
+            "Accept": "application/json, text/plain, */*",
+        }
+        # A chamada agora requer o header 'X-Requested-With'
+        headers["X-Requested-With"] = "XMLHttpRequest"
+        resp = self.session.get(url, headers=headers, timeout=TIMEOUT)
+        if resp.status_code == 403 or resp.status_code == 404:
+            # Fallback para endpoint alternativo
+            alt_url = "https://www.vinted.com/api/v2/auth/token"
+            resp = self.session.get(alt_url, headers=headers, timeout=TIMEOUT)
         resp.raise_for_status()
         data = resp.json()
         token = data.get("token") or data.get("access_token") or data.get("guest_token")
         if not token:
-            raise RuntimeError("Não foi possível obter token convidado da Vinted.")
+            raise RuntimeError(f"Não foi possível obter token convidado. Resposta: {data}")
         self._token = token
-        # Atualiza o header Authorization
         self.session.headers.update({"Authorization": f"Bearer {self._token}"})
+
 
     def _authorized_get(self, url: str, params: Optional[dict] = None) -> requests.Response:
         """
